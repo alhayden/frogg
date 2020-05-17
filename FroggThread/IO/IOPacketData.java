@@ -1,5 +1,5 @@
 package FroggThread.IO;
 
-public class IO {
+public class IOPacketData {
     
 }

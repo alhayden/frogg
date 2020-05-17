@@ -1,4 +1,4 @@
-package FroggThread;
+package FroggThread.IO;
 
 public class IOThread {
     
