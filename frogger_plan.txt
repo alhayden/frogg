@@ -1,0 +1,61 @@
+World data:
+    "ticks" since epoch at start of a level
+    orthogonal coordinate system (floating point) (world/physical coordinates)
+    "chunks" connected groups of spaces frogger can jump in (chunk/logical coordinates)
+        normal vector and physical coordinate is determined by transformation of chunk<->world space
+    all player objects
+    all mobiles (platforms [turtles, lily pads, birds, etc], bugs? obstacles [cars, etc])
+        -platforms could be subset of chunks instead of mobiles (developer gets to choose! both will be supported)
+        objects need these data:
+            logical and/or physical coordinates
+            physical rotation (normal vector, x-y rotation, etc)
+            hitboxes
+            animation tick (for example how far into a jump)
+            mesh/render data?
+            time remaining, points, collected frogs, extra lives
+                -hidden data for stats?
+            enable/disable of platforms (turtles, etc)
+            enable/disable kill frogger (so buttons can use this class)
+    starting position(s)
+    special objects/interactions
+            ice/slime? 
+            boom-boom barrels/launchers
+            homing enemies (airshow antics birds, honey bees)
+            triggers (buttons, etc)
+
+
+movement/update
+    frogger 
+        command w/ ticks since epoch - completes a certain number of ticks later
+            (interpolation for animation)
+    mobiles
+        -allowed subset of functions
+            add, sub, mult, divide, modulo, cos, sin, tan, piecewise capability, constants (pi)/numbers
+        -access to a shared pool of triggers
+        -access to a limited set of static variables
+        -access to animation tick and ticks since epoch
+        -access to write animation tick, write enable/disable platform, write enable/disable kill, write triggers
+        -access to write position, including orientation
+    chunks follow subset of these rules
+        -same allowed functions
+        -access (read) to time since epoch only
+    
+
+program flow per tick
+    
+
+
+
+distribution of work
+    level editor
+    level loader
+        (parse level definitions)
+    level updater
+    object classes                      Zack
+    graphics
+    UI
+    networking/server
+    threads/control                     Zack
+        networking (low-level)
+        IO (low-level)
+        game state changes
