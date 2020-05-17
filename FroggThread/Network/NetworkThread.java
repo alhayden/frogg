@@ -1,3 +1,11 @@
+/**
+ * \file    NetworkThread.java
+ * \authors Zachary Hayden
+ * \date    May 17, 2020
+ * \brief   *
+ * \details *
+ */
+
 package FroggThread.Network;
 
 //java SDK imports
@@ -11,6 +19,11 @@ import FroggThread.*;
 import FroggThread.Network.*;
 import FroggThread.IO.*;
 
+/**
+ * \class   NetworkThread
+ * \brief   Thread that handles network traffic for frogg
+ * \details *
+ */
 public class NetworkThread extends Thread{
 
     //commumications with control thread
@@ -50,7 +63,13 @@ public class NetworkThread extends Thread{
     private Vector<Double> latencyInfo;
 
 
-
+    /**
+     * @brief   
+     * @details 
+     * @param   queueOut
+     * @param   queueIn
+     * @param   commQueue
+     */
     public NetworkThread(PriorityBlockingQueue<NetworkPacketData> queueOut, PriorityBlockingQueue<NetworkPacketData> queueIn, 
                          BlockingQueue<ThreadCommandData> commQueue){
         //communications interfaces
@@ -82,6 +101,10 @@ public class NetworkThread extends Thread{
         //start threads (in suspended state)
     }
 
+    /**
+     * \brief   *
+     * \details *  
+     */
     public void run(){
         //variables
         ThreadCommandData command;
