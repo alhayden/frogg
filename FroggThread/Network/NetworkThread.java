@@ -26,8 +26,16 @@ import FroggThread.IO.*;
  */
 public class NetworkThread extends Thread{
 
+    //define constants
+    /**
+     * @brief   Maximum number of connected sockets
+     * @details When the network threads act as a server, this is the maximum number
+     *          of clients that are allowed to connect
+     */
+    public static final int MAX_CONNECTIONS = 8;
+
     //commumications with control thread
-    private final PriorityBlockingQueue<NetworkPacketData> dataOut;
+    private final BlockingQueue<NetworkPacketData> dataOut;
     private final PriorityBlockingQueue<NetworkPacketData> dataIn;
     private final BlockingQueue<ThreadCommandData> commIn;
 
@@ -43,13 +51,15 @@ public class NetworkThread extends Thread{
 
     //socket objects (stream)
     private Socket clientSocket;
-    private Vector<Socket> connectedSockets;
+    private Socket[] connectedSockets;
+    private AtomicBoolean[] validSockets;
     private ServerSocket serverSocket;
 
     //internet addressing objects
-    private NetworkInterface net;
-    private InetAddress localAddr;
-    private InetAddress remoteAddr;
+    private SocketAddress localAddr;
+    private InetAddress remoteIP;
+    private InetSocketAddress remoteAddr;
+
 
     //Socket options?
 
@@ -70,8 +80,9 @@ public class NetworkThread extends Thread{
      * @param   queueIn
      * @param   commQueue
      */
-    public NetworkThread(PriorityBlockingQueue<NetworkPacketData> queueOut, PriorityBlockingQueue<NetworkPacketData> queueIn, 
+    public NetworkThread(BlockingQueue<NetworkPacketData> queueOut, PriorityBlockingQueue<NetworkPacketData> queueIn, 
                          BlockingQueue<ThreadCommandData> commQueue){
+
         //communications interfaces
         dataOut = queueOut;
         dataIn  = queueIn;
@@ -89,15 +100,14 @@ public class NetworkThread extends Thread{
 
         //create new sockets
         clientSocket = new Socket();
-        connectedSockets = new Vector<Socket>();
+        connectedSockets = new Socket[MAX_CONNECTIONS];
+        validSockets = new AtomicBoolean[MAX_CONNECTIONS];
         serverSocket = new ServerSocket();
 
         //create new Threads
         rxThread = new NetworkRxThread();
         txThread = new NetworkTxThread();
 
-        //find the network state
-        //setup local address
         //start threads (in suspended state)
     }
 
@@ -144,11 +154,14 @@ public class NetworkThread extends Thread{
                         //put the command back in the queue because it isn't meant for me?
                 }
             }
+            //server: accept connections
         }
     }
 
     private void comm_stop(){
         //set signals
+        rxSuspend.set(false);   //suspended threads can't detect stop signal
+        txSuspend.set(false);
         rxStop.set(true);
         txStop.set(true);
         //wait for response
@@ -162,6 +175,8 @@ public class NetworkThread extends Thread{
         txSuspend.set(true);
         //wait for repsonse
         while( !( txSuspended.get() && rxSuspended.get() ) ){}
+        //NOTE: this does not suspend this thread (otherwise it couldn't be restarted)
+        //it suspends all of the TX/RX operations of this thread's subthreads
     }
 
     private void comm_set_port(){

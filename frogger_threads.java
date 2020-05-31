@@ -98,61 +98,6 @@ public class IOThread extends Thread{
     }
 }
 
-public class NetworkTxThread extends Thread{
-//queue->network
-
-//network config data
-private boolean isServer;
-private InetSocketAddress serverAddr;
-
-//internal communications
-private final PriorityBlockingQueue<FrogPacketData> dataIn;
-private final BlockingQueue<Integer> commIn;
-
-//external communications
-private Socket clientTx;
-private ArrayList<Socket> serverTx;
-private ServerSocket serverConn;
-
-    public NetworkTxThread()
-    {
-
-    }
-
-    public void run()
-    {
-        ThreadCommand command;
-        //read commands
-        command = ThreadCommand( commIn.poll() );
-
-        //determine if/how to send data to the sockets
-    }
-}
-
-public class NetworkRxThread extends Thread{
-//network->queue->update for player objects/server
-
-private boolean isServer;
-
-private Socket clientRx;
-private ArrayList<Socket> serverRx;
-private ServerSocket serverConn;
-
-    public void run()
-    {
-
-    }
-}
-
-public class FrogPacketData{
-//stores game data that must be passed to or from the server
-//without the packet headers, addresses, ports, etc of an actual packet
-}
-
-public class IOPacketData{
-    //stores game data that must be passed to or from the server
-    //without the packet headers, addresses, ports, etc of an actual packet
-    }
 
 public enum GameState{
     GAME_LOADING,
@@ -166,45 +111,3 @@ public enum GameState{
     CLEANUP_THREAD
 }
 
-public class ThreadCommandData{
-    //stores commands and associated data that must be passed between threads
-    }
-
-public enum ThreadCommand{
-    //A ThreadCommand is sent as in integer and may be followed by a number of 
-    //integer data words
-
-    //replies for commands that require verification---------------------
-    ACK             (0),
-    NACK            (1),
-    STATUS          (2),
-    //general thread commands ---------------------------------------------
-    STOP            (3), //stops execution of the thread (the thread should return as soon as possible)
-    //socket control commands----------------------------------------------
-    SET_MY_PORT     (4),
-    SET_REMOTE_PORT (5),
-    SET_REMOTE_IP   (6),
-    SET_SERVER      (7),
-    SET_CLIENT      (8),
-    CONNECT         (9), //client only
-    DISCONNECT      (10),
-    //keyboard control commands
-    SET_KEYBIND     (11),
-
-    INVALID         (12)    
-    ;
-
-    private final int code;
-
-    //ThreadCommand constructor from int
-    ThreadCommand( int commCode )
-    {
-        this.code = commCode;
-    }
-
-    //get the code for transmission
-    public int code()
-    {
-        return this.code;
-    }
-}

@@ -3,6 +3,7 @@ package FroggThread.Network;
 //java SDK imports
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.net.*;
 
 //project imports
@@ -23,7 +24,8 @@ public class NetworkRxThread extends Thread{
     
     //external communications
     private Socket clientTx;
-    private ArrayList<Socket> serverTx;
+    private Socket[] serverTx;
+    private AtomicBoolean[] serverTxLock;
     private ServerSocket serverConn;
     
     public NetworkRxThread()
