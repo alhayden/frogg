@@ -1,9 +1,8 @@
 package FroggThread.Network;
 
 //java SDK imports
-import java.net.*;
 import java.io.*;
-// import java.util.*;
+import java.net.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 
@@ -23,15 +22,12 @@ public class NetworkTxThread extends Thread{
     private AtomicBoolean txSuspended;
     private AtomicBoolean isServer;
 
-
     //external communications
     private Socket clientSocket;
     private ByteArrayOutputStream clientStream;
     // private Socket[] connectedSockets;
     private AtomicBoolean[] validSockets;
     private ByteArrayOutputStream[] serverStreams;
-
-
     
     public NetworkTxThread( BlockingQueue<NetworkPacketData> dataQueue, AtomicBoolean stopIn, AtomicBoolean stopOut,
                             AtomicBoolean suspIn, AtomicBoolean suspOut, AtomicBoolean server, Socket client, 
@@ -70,13 +66,6 @@ public class NetworkTxThread extends Thread{
             }
             //change flag when exiting suspened state
             txSuspended.set(false);
-
-            //stop thread
-            if( txStop.get() )
-            {
-                txStop.set(true);
-                break;
-            }
 
             cached_isServer = isServer.get();
 

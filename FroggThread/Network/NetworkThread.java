@@ -41,6 +41,7 @@ public class NetworkThread extends Thread{
     private final BlockingQueue<NetworkPacketData> dataOut;
     private final PriorityBlockingQueue<NetworkPacketData> dataIn;
     private final BlockingQueue<ThreadCommandData> commIn;
+    private final BlockingQueue<ThreadCommandData> commOut;
 
     //communications with rx and tx subthreads
     private AtomicBoolean rxStop;
@@ -86,14 +87,16 @@ public class NetworkThread extends Thread{
      * @param   queueOut
      * @param   queueIn
      * @param   commQueue
+     * @param   replyQueue
      */
     public NetworkThread(BlockingQueue<NetworkPacketData> queueOut, PriorityBlockingQueue<NetworkPacketData> queueIn, 
-                         BlockingQueue<ThreadCommandData> commQueue){
+                         BlockingQueue<ThreadCommandData> commQueue, BlockingQueue<ThreadCommandData> replyQueue){
 
         //communications interfaces
         dataOut = queueOut;
         dataIn  = queueIn;
         commIn  = commQueue;
+        commOut = replyQueue;
 
         //create new flags for subthread interfaces
         rxStop = new AtomicBoolean(false);
@@ -104,6 +107,10 @@ public class NetworkThread extends Thread{
         txSuspend = new AtomicBoolean(true);
         txStopped = new AtomicBoolean(false);
         txSuspended = new AtomicBoolean(false);
+
+        //
+        isServer = new AtomicBoolean(false);
+        netStatus = NetworkStatus.NO_INTERFACE;
 
         //create new sockets
         clientSocket = new Socket();
@@ -118,7 +125,8 @@ public class NetworkThread extends Thread{
         serverSocket = new ServerSocket();
 
         //create new Threads
-        rxThread = new NetworkRxThread();
+        rxThread = new NetworkRxThread( dataIn, rxStop, rxSuspend, rxStopped, rxSuspended, isServer, clientSocket,
+                                        clientInStream, validSockets, serverInStream);
         txThread = new NetworkTxThread( dataOut, txStop, txSuspend, txStopped, txSuspended, isServer, clientSocket,
                                         clientOutStream, validSockets, serverOutStream);
 
@@ -129,7 +137,8 @@ public class NetworkThread extends Thread{
      * \brief   *
      * \details *  
      */
-    public void run(){
+    public void run()
+    {
         //variables
         ThreadCommandData command;
         //check for commands on the command Queue (do this forever)
@@ -152,9 +161,15 @@ public class NetworkThread extends Thread{
                         comm_set_port();
                         break;
                     case SET_REMOTE_PORT:
+                        break;
                     case SET_REMOTE_IP:
+                        break;
                     case SET_SERVER:
+                        comm_set_server();
+                        break;
                     case SET_CLIENT:
+                        comm_set_client();
+                        break;
                     case CONNECT:
                         comm_connect();
                         break;
@@ -169,6 +184,8 @@ public class NetworkThread extends Thread{
                 }
             }
             //server: accept connections
+
+            //monitor connections
         }
     }
 
@@ -194,18 +211,123 @@ public class NetworkThread extends Thread{
     }
 
     private void comm_set_port(){
+        //check connection state
+        switch(netStatus){
+            //no interface to connect to
+            case NO_INTERFACE:
+                return;
+            //no errors; not connected (ok to change port)
+            case INSUFF_ADDR:
+            case NO_CONN:
+                break;
+            //connected (not okay to change port)
+            case ACCEPTING:
+            case CONNECTED:
+                return;
+            //suspended (?)
+            case SUSPENDED:
+                break;
+        }
 
     }
 
     private void comm_connect(){
-
+        //check connection state
+        switch(netStatus){
+            //no interface to connect to
+            case NO_INTERFACE:
+                return;
+            //no errors; not connected (ok to change port)
+            case INSUFF_ADDR:
+            case NO_CONN:
+                break;
+            //connected (not okay to change port)
+            case ACCEPTING:
+            case CONNECTED:
+                return;
+            //suspended (?)
+            case SUSPENDED:
+                break;
+        }
     }
 
     private void comm_disconnect(){
+        //check connection state
+        switch(netStatus){
+            //no interface to connect to
+            case NO_INTERFACE:
+                return;
+            //no errors; not connected (ok to change port)
+            case INSUFF_ADDR:
+            case NO_CONN:
+                break;
+            //connected (not okay to change port)
+            case ACCEPTING:
+            case CONNECTED:
+                return;
+            //suspended (?)
+            case SUSPENDED:
+                break;
+        }
+    }
 
+    private void comm_set_server(){
+        //check connection state
+        switch(netStatus){
+            //no interface to connect to
+            case NO_INTERFACE:
+                return;
+            //no errors; not connected (ok to change port)
+            case INSUFF_ADDR:
+            case NO_CONN:
+                break;
+            //connected (not okay to change port)
+            case ACCEPTING:
+            case CONNECTED:
+                return;
+            //suspended (?)
+            case SUSPENDED:
+                break;
+        }
+    }
+
+    private void comm_set_client(){
+        //check connection state
+        switch(netStatus){
+            //no interface to connect to
+            case NO_INTERFACE:
+                return;
+            //no errors; not connected (ok to change port)
+            case INSUFF_ADDR:
+            case NO_CONN:
+                break;
+            //connected (not okay to change port)
+            case ACCEPTING:
+            case CONNECTED:
+                return;
+            //suspended (?)
+            case SUSPENDED:
+                break;
+        }
     }
 
     private void comm_status(){
-
+        //check connection state
+        switch(netStatus){
+            //no interface to connect to
+            case NO_INTERFACE:
+                return;
+            //no errors; not connected (ok to change port)
+            case INSUFF_ADDR:
+            case NO_CONN:
+                break;
+            //connected (not okay to change port)
+            case ACCEPTING:
+            case CONNECTED:
+                return;
+            //suspended (?)
+            case SUSPENDED:
+                break;
+        }
     }
 }

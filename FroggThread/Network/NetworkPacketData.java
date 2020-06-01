@@ -18,7 +18,8 @@ public class NetworkPacketData {
         return new byte[1];
     }
 
-    public void fromBytes(){
-
+    public static int numBytes(byte id)
+    {
+        return 0;
     }
 }
