@@ -12,6 +12,7 @@ package FroggThread.Network;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
+import java.io.*;
 import java.net.*;
 
 //project imports
@@ -33,6 +34,8 @@ public class NetworkThread extends Thread{
      *          of clients that are allowed to connect
      */
     public static final int MAX_CONNECTIONS = 8;
+    private static final int TX_BUFFER = 128;
+    private static final int RX_BUFFER = 128;
 
     //commumications with control thread
     private final BlockingQueue<NetworkPacketData> dataOut;
@@ -51,8 +54,12 @@ public class NetworkThread extends Thread{
 
     //socket objects (stream)
     private Socket clientSocket;
+    private ByteArrayOutputStream clientOutStream;
+    private ByteArrayInputStream clientInStream;
     private Socket[] connectedSockets;
     private AtomicBoolean[] validSockets;
+    private ByteArrayOutputStream[] serverOutStream;
+    private ByteArrayInputStream[] serverInStream;
     private ServerSocket serverSocket;
 
     //internet addressing objects
@@ -100,13 +107,20 @@ public class NetworkThread extends Thread{
 
         //create new sockets
         clientSocket = new Socket();
+        clientOutStream = new ByteArrayOutputStream(TX_BUFFER);
+        clientInStream = new ByteArrayInputStream(new byte[RX_BUFFER]);
         connectedSockets = new Socket[MAX_CONNECTIONS];
         validSockets = new AtomicBoolean[MAX_CONNECTIONS];
+        for(int i = 0; i < MAX_CONNECTIONS; i++){
+            serverOutStream[i] = new ByteArrayOutputStream(TX_BUFFER);
+            serverInStream[i] = new ByteArrayInputStream(new byte[RX_BUFFER]);
+        }
         serverSocket = new ServerSocket();
 
         //create new Threads
         rxThread = new NetworkRxThread();
-        txThread = new NetworkTxThread();
+        txThread = new NetworkTxThread( dataOut, txStop, txSuspend, txStopped, txSuspended, isServer, clientSocket,
+                                        clientOutStream, validSockets, serverOutStream);
 
         //start threads (in suspended state)
     }
