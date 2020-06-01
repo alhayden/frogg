@@ -2,8 +2,9 @@
  * \file    NetworkThread.java
  * \authors Zachary Hayden
  * \date    May 17, 2020
- * \brief   *
- * \details *
+ * \brief   Thread that runs the network connection for Frogg
+ * \details Defines a thread that handles TX and RX connections for Frogg
+ *          that can be configured as either a client or a server.
  */
 
 package FroggThread.Network;
@@ -23,7 +24,6 @@ import FroggThread.IO.*;
 /**
  * \class   NetworkThread
  * \brief   Thread that handles network traffic for frogg
- * \details *
  */
 public class NetworkThread extends Thread{
 
@@ -84,7 +84,6 @@ public class NetworkThread extends Thread{
 
     /**
      * @brief   Creates a NetworkThread object
-     * @details 
      * @param   thread      ID of the thread, defined by the thread that creates it. (used for certain ThreadCommands)
      * @param   queueOut    Queue containing NetworkPacketData objects to transmit
      * @param   queueIn     Queue containing revieved NetworkPacketData objects
@@ -161,15 +160,16 @@ public class NetworkThread extends Thread{
                         comm_suspend();
                         break;
                     case RESUME:
-                        rxSuspend.set(false);
-                        txSuspend.set(false);
+                        comm_resume();
                         break;
                     case SET_MY_PORT:
-                        comm_set_port();
+                        comm_set_port(command);
                         break;
                     case SET_REMOTE_PORT:
+                        comm_set_remote_addr(command);
                         break;
                     case SET_REMOTE_IP:
+                        comm_set_remote_addr(command);
                         break;
                     case SET_SERVER:
                         comm_set_server();
@@ -215,31 +215,102 @@ public class NetworkThread extends Thread{
         while( !( txSuspended.get() && rxSuspended.get() ) ){}
         //NOTE: this does not suspend this thread (otherwise it couldn't be restarted)
         //it suspends all of the TX/RX operations of this thread's subthreads
+        netStatus = NetworkStatus.SUSPENDED;
     }
 
-    private void comm_set_port(){
+    private void comm_resume(){
+        rxSuspend.set(false);
+        txSuspend.set(false);
+        if((localAddr == null) || (remoteAddr == null) || (remoteIP == null)){
+            netStatus = NetworkStatus.INSUFF_ADDR;
+        }
+        else{
+            netStatus = NetworkStatus.NO_CONN;
+        }        
+    }
+
+    private void comm_set_port(ThreadCommandData command){
         //check connection state
         switch(netStatus){
             //no interface to connect to
             case NO_INTERFACE:
-                send_nack();
+                send_nack(command.getUid());
                 return;
             //no errors; not connected (ok to change port)
             case INSUFF_ADDR:
             case NO_CONN:
-                //
-                send_ack();
+            case SUSPENDED:
+                //replace socket address
+                localAddr = new InetSocketAddress(command.getPort());
+                //try to bind the sockets
+                try{
+                    if(clientSocket.isBound()){
+                        clientSocket.close();
+                        clientSocket = new Socket();
+                    }
+                    clientSocket.bind(localAddr);
+                    if(serverSocket.isBound()){
+                        serverSocket.close();
+                        serverSocket = new ServerSocket();
+                    }
+                    serverSocket.bind(localAddr);
+                    send_ack(command.getUid());
+                }
+                catch(Exception e){
+                    send_nack(command.getUid());
+                }
+                return;
+            //connected (not okay to change port)
+            case ACCEPTING:
+            case CONNECTED:
+                send_nack(command.getUid());
+                return;
+        }
+
+    }
+
+    private void comm_set_remote_addr(ThreadCommandData command){
+        //check connection state
+        switch(netStatus){
+            //no interface to connect to
+            case NO_INTERFACE:
+                send_nack(command.getUid());
+                return;
+            //no errors; not connected (ok to change port)
+            case INSUFF_ADDR:
+            case NO_CONN:
+            case SUSPENDED:
+                if(command.command == ThreadCommand.SET_REMOTE_PORT){
+                    try{
+                        remoteAddr = new InetSocketAddress(remoteIP, command.getPort());
+                        send_ack(command.getUid());
+                    }
+                    catch(Exception e){
+                        send_nack(command.getUid());
+                    }
+                }
+                else{
+                    try{
+                        if(command.getIPv() == 4){
+                            remoteIP = Inet4Address.getByAddress(command.getIP());
+                        }
+                        else{
+                            remoteIP = Inet6Address.getByAddress(command.getIP());
+                        }
+                        remoteAddr = new InetSocketAddress(remoteIP, remoteAddr.getPort());
+                        send_ack(command.getUid());
+                    }
+                    catch(Exception e){
+                        send_nack(command.getUid());
+                    }
+                }
                 break;
             //connected (not okay to change port)
             case ACCEPTING:
             case CONNECTED:
-                send_nack();
+                send_nack(command.getUid());
                 return;
-            //suspended (?)
-            case SUSPENDED:
-                break;
         }
-
     }
 
     private void comm_connect(){
@@ -342,13 +413,17 @@ public class NetworkThread extends Thread{
         }
     }
 
-    private void send_ack(){
-        ThreadCommandData response = new ThreadCommandData(ThreadCommand.ACK, threadId);
+    private void send_ack(int id){
+        ThreadCommandData response = new ThreadCommandData(ThreadCommand.ACK, threadId, id);
         commOut.put(response);
     }
 
-    private void send_nack(){
-        ThreadCommandData response = new ThreadCommandData(ThreadCommand.NACK, threadId);
+    private void send_nack(int id){
+        ThreadCommandData response = new ThreadCommandData(ThreadCommand.NACK, threadId, id);
         commOut.put(response);
+    }
+
+    private void setup_socket(Socket sock){
+
     }
 }

@@ -36,6 +36,7 @@ public enum ThreadCommand{
                          */
     RESUME,             /**< Resumes execution of the thread
                          *  \brief Resumes execution of the thread
+                         *  \note The status of the network will be NetworkStatus.NO_CONN or NetworkStatus.INSUFF_ADDR
                          */
     //socket control commands---------------------------------------------------------------------------
     SET_MY_PORT,        /**< Attempts to set local port to the specified port if disconnected

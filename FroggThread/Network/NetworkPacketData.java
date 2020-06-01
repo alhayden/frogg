@@ -1,3 +1,11 @@
+/**
+ * \file    NetworkPacketType.java
+ * \authors Zachary Hayden
+ * \date    May 31, 2020
+ * \brief   Defines a set of network packets
+ * \details Defines a class that can represent all of the types of packets used by Frogg
+ */
+
 package FroggThread.Network;
 
 public class NetworkPacketData {
@@ -29,7 +37,7 @@ public class NetworkPacketData {
      * @brief   Creates a NetworkPacketData object of type STANDARD
      * @param a
      */
-    public NetworkPacketData(int a){
+    public NetworkPacketData(int[] a){
         //standard constructor
     }
 
@@ -37,7 +45,7 @@ public class NetworkPacketData {
      * @brief   Creates a NetworkPacketData object of type STATUS
      * @param a
      */
-    public NetworkPacketData(byte[] a){
+    public NetworkPacketData(int a){
         //standard constructor
     }
 
