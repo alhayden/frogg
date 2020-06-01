@@ -75,7 +75,7 @@ public enum ThreadCommand{
                          */
     GET_NET_STATUS,     /**< Gets status info from the network thread
                             \brief Gets status info from the network thread
-                            \result STATUS, with network status info 
+                            \result ACK. The server will send a network status packet in response 
                         */
     //keyboard control commands--------------------------------------------------------------------------
     SET_KEYBIND,//?

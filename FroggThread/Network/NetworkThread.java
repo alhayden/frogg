@@ -30,7 +30,7 @@ public class NetworkThread extends Thread{
     //define constants
     /**
      * @brief   Maximum number of connected sockets
-     * @details When the network threads act as a server, this is the maximum number
+     * @details When NetworkThread acts as a server, this is the maximum number
      *          of clients that are allowed to connect
      */
     public static final int MAX_CONNECTIONS = 8;
@@ -42,6 +42,7 @@ public class NetworkThread extends Thread{
     private final PriorityBlockingQueue<NetworkPacketData> dataIn;
     private final BlockingQueue<ThreadCommandData> commIn;
     private final BlockingQueue<ThreadCommandData> commOut;
+    private final byte threadId;
 
     //communications with rx and tx subthreads
     private AtomicBoolean rxStop;
@@ -82,14 +83,16 @@ public class NetworkThread extends Thread{
 
 
     /**
-     * @brief   
+     * @brief   Creates a NetworkThread object
      * @details 
-     * @param   queueOut
-     * @param   queueIn
-     * @param   commQueue
-     * @param   replyQueue
+     * @param   thread      ID of the thread, defined by the thread that creates it. (used for certain ThreadCommands)
+     * @param   queueOut    Queue containing NetworkPacketData objects to transmit
+     * @param   queueIn     Queue containing revieved NetworkPacketData objects
+     * @param   commQueue   Queue of ThreadCommands from the creating/controlling thread
+     * @param   replyQueue  Queue of replies to the creating/controlling thread
+     * @note    replyQueue can be shared with other threads but NetworkThread does not support sharing of commQueue
      */
-    public NetworkThread(BlockingQueue<NetworkPacketData> queueOut, PriorityBlockingQueue<NetworkPacketData> queueIn, 
+    public NetworkThread(byte thread, BlockingQueue<NetworkPacketData> queueOut, PriorityBlockingQueue<NetworkPacketData> queueIn, 
                          BlockingQueue<ThreadCommandData> commQueue, BlockingQueue<ThreadCommandData> replyQueue){
 
         //communications interfaces
@@ -97,6 +100,7 @@ public class NetworkThread extends Thread{
         dataIn  = queueIn;
         commIn  = commQueue;
         commOut = replyQueue;
+        threadId = thread;
 
         //create new flags for subthread interfaces
         rxStop = new AtomicBoolean(false);
@@ -130,17 +134,20 @@ public class NetworkThread extends Thread{
         txThread = new NetworkTxThread( dataOut, txStop, txSuspend, txStopped, txSuspended, isServer, clientSocket,
                                         clientOutStream, validSockets, serverOutStream);
 
-        //start threads (in suspended state)
+        
     }
 
     /**
-     * \brief   *
-     * \details *  
+     * \brief   Starts execution of NetworkThread
+     * \details Starts execution of NetworkThread, which will then start its subthreads
      */
     public void run()
     {
         //variables
         ThreadCommandData command;
+
+        //start threads (in suspended state)
+
         //check for commands on the command Queue (do this forever)
         while(true){
             command = commIn.poll();
@@ -215,14 +222,18 @@ public class NetworkThread extends Thread{
         switch(netStatus){
             //no interface to connect to
             case NO_INTERFACE:
+                send_nack();
                 return;
             //no errors; not connected (ok to change port)
             case INSUFF_ADDR:
             case NO_CONN:
+                //
+                send_ack();
                 break;
             //connected (not okay to change port)
             case ACCEPTING:
             case CONNECTED:
+                send_nack();
                 return;
             //suspended (?)
             case SUSPENDED:
@@ -329,5 +340,15 @@ public class NetworkThread extends Thread{
             case SUSPENDED:
                 break;
         }
+    }
+
+    private void send_ack(){
+        ThreadCommandData response = new ThreadCommandData(ThreadCommand.ACK, threadId);
+        commOut.put(response);
+    }
+
+    private void send_nack(){
+        ThreadCommandData response = new ThreadCommandData(ThreadCommand.NACK, threadId);
+        commOut.put(response);
     }
 }

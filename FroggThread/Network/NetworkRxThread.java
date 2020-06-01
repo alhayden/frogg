@@ -1,3 +1,13 @@
+/**
+ * \file    NetworkRxThread.java
+ * \authors Zachary Hayden
+ * \date    May 31, 2020
+ * \brief   Thread for receiving packets
+ * \details This file defines a thread that handles receiving packets over the network.
+ *          This class should not be instantiated directly but is automatically created by
+ *          NetworkThread when an object of that class is instantiated.
+ */
+
 package FroggThread.Network;
 
 //java SDK imports
@@ -9,6 +19,11 @@ import java.util.concurrent.atomic.*;
 //project imports
 import FroggThread.Network.*;
 
+/**
+ * \class   NetworkRxThread
+ * \brief   Thread that receives packets
+ * \note    Do not instantiate this class. NetworkThread will create and start NetworkTxThread automatically.
+ */
 public class NetworkRxThread extends Thread{
     //queue<-network
 
@@ -29,6 +44,20 @@ public class NetworkRxThread extends Thread{
     private AtomicBoolean[] validSockets;
     private ByteArrayInputStream[] serverStreams;
     
+    /**
+     * \brief   Creates a NetworkRxThread object
+     * \note    Do not instantiate this class. NetworkThread will create and start NetworkTxThread automatically.
+     * \param   dataQueue   Queue of NetworkPacketData objects to transmit
+     * \param   stopIn      Flag to request that ths thread stops and terminates itself
+     * \param   stopOut     Flag to acknowledge that this thread is stopping and terminating
+     * \param   suspIn      Flag to request that this thread suspends its execution
+     * \param   suspOut     Flag to acknowledge that this thread is suspending
+     * \param   server      Flag that determines whether the thread should act as a client or server
+     * \param   client      Client socket object
+     * \param   cStream     Input stream of the client socket
+     * \param   vSockets    Array of flags that indicate whether server sockets are properly connected
+     * \param   sStream     Array of input streams for the server sockets
+     */
     public NetworkRxThread( BlockingQueue<NetworkPacketData> dataQueue, AtomicBoolean stopIn, AtomicBoolean stopOut,
     AtomicBoolean suspIn, AtomicBoolean suspOut, AtomicBoolean server, Socket client, 
     ByteArrayInputStream cStream, AtomicBoolean[] vSockets, ByteArrayInputStream[] sStream)
@@ -50,6 +79,10 @@ public class NetworkRxThread extends Thread{
         //There are currently no purely internal variables, so setup is complete
     }
 
+    /**
+     * \brief   Starts execution of the NetworkRxThread object
+     * \note    Do not use this function. NetworkThread will create and start NetworkTxThread automatically.
+     */
     public void run()
     {
         boolean cached_isServer;
