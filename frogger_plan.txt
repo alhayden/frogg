@@ -50,7 +50,7 @@ distribution of work
     level editor
     level loader
         (parse level definitions)
-    level updater
+    level updater                       Zack
     object classes                      Zack
     graphics
     UI
@@ -59,3 +59,8 @@ distribution of work
         networking (low-level)
         IO (low-level)
         game state changes
+
+
+threading plan: each sector has it's own Updater. when it's time to update, one call of Updater.update from each sector to
+a thread pool. As long as update is not called on the same Updater object in multiple threads AND each FroggObj is
+only in a single sector, it should work fine
